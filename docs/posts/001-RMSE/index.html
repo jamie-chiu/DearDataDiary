@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jamie Chiu">
+<meta name="dcterms.date" content="2023-05-11">
+
+<title>Dear (Data) Diary - What does it mean to have an RMSE of 1.2? How wrong is it?</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Dear (Data) Diary</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">What does it mean to have an RMSE of 1.2? How <em>wrong</em> is it?</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">R</div>
+                <div class="quarto-category">linear regression</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Jamie Chiu </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">May 11, 2023</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>I recently participated in the “<a href="https://github.com/Emognition/EPiC-2023-competition">Emotion Physiology and Experience Collaboration (EPiC)</a>” competition, which involved predicting 30-seconds worth of continuous self-reported valence and arousal ratings of participants given their physiological data. You could use any model and the evaluation metric was the root mean squared error (RMSE).</p>
+<p>Like a good scientist, I started with browsing research and conference papers in the emotion prediction space to get a feel for what existing models were being used and how good they were at the task. One interesting thing that I saw was that the RMSEs reported in papers with complex neutral network models only slightly beat out our trusty old friend the linear regression model, with the “best fitting model” quoted as having an RMSE of 1.2. But what is RMSE anyway and what does an RMSE of 1.2 really mean?</p>
+<p><img src="001-thumbnail.png" class="img-fluid"></p>
+<p>In this post, I will use a subset of the EPiC dataset to demonstrate how to calculate RMSE and how to interpret it. We will use a training set to train a model and a test set to evaluate our predictions.</p>
+<section id="load-in-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-in-data">Load in data</h2>
+<p>The dataset that was used in the EPiC competition came from a public dataset called <a href="https://gitlab.com/karan-shr/case_dataset">CASE</a>, which stands for Continuously Annotated Signals of Emotion.</p>
+<p>The original CASE dataset contained data from 30 participants. Each participant watched 8 videos that were chosen to elicit one of 4 emotional states (2 videos per emotional state), corresponding to different corners of the valence-arousal space: amusement (positive valence, high arousal), fear (negative valence, high arousal), boredom (negative valence, low arousal) and relaxation (positive valence, low arousal). Participants used a joystick to annotate valence and arousal in a 2D grid, which were collected at a rate of 20Hz (i.e.&nbsp;every 50ms). The dataset also included 8 physiological measures, each sampled at a rate of 1000Hz: electrocardiography (ECG), blood volume pulse (BVP), galvanic skin response (GSR), respiration (RSP), skin temperature (SKT) and electromyography (EMG) measuring the activity of three facial and back muscles.</p>
+<p>For the purposes of this post, I subsetted a portion of the original dataset (and split it into train and test sets) and downsampled the physiological data to match the emotion ratings at every 50ms. I also exported it as a csv file and that is what we will be using here. (I hope you can appreciate that I had to do a lot of data cleaning and wrangling to get the data into this clean format! My biggest takeaway from participating in this competition was that 75% was data wrangling and preprocessing, 20% was waiting for your model to train, and 5% was actually building the model. lol just kidding… but not really.)</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load in data</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://jamie-chiu.github.io/Dear (Data) Diary/posts/001-RMSE/training_dataset.csv"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://jamie-chiu.github.io/Dear (Data) Diary/posts/001-RMSE/test_dataset.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="explore-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="explore-the-data">Explore the data</h2>
+<p>Let’s take a look at the training dataset.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># display first few rows</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(train_dataset) <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>fold) <span class="sc">%&gt;%</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">subject</th>
+<th style="text-align: right;">time</th>
+<th style="text-align: right;">ecg</th>
+<th style="text-align: right;">bvp</th>
+<th style="text-align: right;">gsr</th>
+<th style="text-align: right;">rsp</th>
+<th style="text-align: right;">skt</th>
+<th style="text-align: right;">emg_zygo</th>
+<th style="text-align: right;">emg_coru</th>
+<th style="text-align: right;">emg_trap</th>
+<th style="text-align: right;">valence</th>
+<th style="text-align: right;">arousal</th>
+<th style="text-align: left;">video</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.004</td>
+<td style="text-align: right;">36.758</td>
+<td style="text-align: right;">6.183</td>
+<td style="text-align: right;">32.895</td>
+<td style="text-align: right;">25.232</td>
+<td style="text-align: right;">5.933</td>
+<td style="text-align: right;">7.986</td>
+<td style="text-align: right;">7.615</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: left;">scary-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">0.849</td>
+<td style="text-align: right;">37.633</td>
+<td style="text-align: right;">6.209</td>
+<td style="text-align: right;">33.156</td>
+<td style="text-align: right;">25.242</td>
+<td style="text-align: right;">6.056</td>
+<td style="text-align: right;">8.109</td>
+<td style="text-align: right;">7.289</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: left;">scary-1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">0.826</td>
+<td style="text-align: right;">37.561</td>
+<td style="text-align: right;">6.202</td>
+<td style="text-align: right;">32.914</td>
+<td style="text-align: right;">25.242</td>
+<td style="text-align: right;">6.302</td>
+<td style="text-align: right;">7.782</td>
+<td style="text-align: right;">7.905</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: left;">scary-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">10000</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">36.893</td>
+<td style="text-align: right;">6.202</td>
+<td style="text-align: right;">33.282</td>
+<td style="text-align: right;">25.232</td>
+<td style="text-align: right;">5.974</td>
+<td style="text-align: right;">8.274</td>
+<td style="text-align: right;">8.601</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: left;">scary-1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">100000</td>
+<td style="text-align: right;">0.596</td>
+<td style="text-align: right;">37.455</td>
+<td style="text-align: right;">9.549</td>
+<td style="text-align: right;">31.385</td>
+<td style="text-align: right;">25.168</td>
+<td style="text-align: right;">6.837</td>
+<td style="text-align: right;">7.864</td>
+<td style="text-align: right;">8.726</td>
+<td style="text-align: right;">3.364</td>
+<td style="text-align: right;">5.715</td>
+<td style="text-align: left;">scary-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">100050</td>
+<td style="text-align: right;">0.557</td>
+<td style="text-align: right;">37.251</td>
+<td style="text-align: right;">9.518</td>
+<td style="text-align: right;">31.385</td>
+<td style="text-align: right;">25.172</td>
+<td style="text-align: right;">6.836</td>
+<td style="text-align: right;">7.862</td>
+<td style="text-align: right;">7.616</td>
+<td style="text-align: right;">3.364</td>
+<td style="text-align: right;">5.715</td>
+<td style="text-align: left;">scary-1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>How many train and test subjects do we have?</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># count number of subjects</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(train_dataset<span class="sc">$</span>subject) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">length</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">"Number of train subjects: "</span>, .)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Number of train subjects: 8"</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(test_dataset<span class="sc">$</span>subject) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">length</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">"Number of test subjects: "</span>, .)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Number of test subjects: 4"</code></pre>
+</div>
+</div>
+<p>How many observations do we have for each subject?</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># count number of observations per subject per video</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(video) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">length =</span> (<span class="fu">n</span>()<span class="sc">/</span><span class="dv">8</span>)<span class="sc">*</span><span class="fl">0.05</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">obs =</span> <span class="fu">n</span>()<span class="sc">/</span><span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># reorder columns </span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Video"</span>, <span class="st">"Length of video (seconds)"</span>, <span class="st">"Number of observations"</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">"Number of training observations per video"</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">digits =</span> <span class="dv">0</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<caption>Number of training observations per video</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Video</th>
+<th style="text-align: right;">Length of video (seconds)</th>
+<th style="text-align: right;">Number of observations</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">amusing-1</td>
+<td style="text-align: right;">161</td>
+<td style="text-align: right;">3217</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">amusing-2</td>
+<td style="text-align: right;">144</td>
+<td style="text-align: right;">2873</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">boring-1</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">1376</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">boring-2</td>
+<td style="text-align: right;">126</td>
+<td style="text-align: right;">2516</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">relaxing-1</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: right;">2104</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">relaxing-2</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: right;">2149</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">scary-1</td>
+<td style="text-align: right;">177</td>
+<td style="text-align: right;">3531</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">scary-2</td>
+<td style="text-align: right;">103</td>
+<td style="text-align: right;">2067</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Let’s take a look at one participant’s physiological measures and emotion annotations for a scary video.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plotting one participant's data</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork) <span class="co"># for arranging plots</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># define physiological measures</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>measures <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ecg"</span>, <span class="st">"bvp"</span>, <span class="st">"gsr"</span>, <span class="st">"rsp"</span>, <span class="st">"skt"</span>, <span class="st">"emg_zygo"</span>, <span class="st">"emg_coru"</span>, <span class="st">"emg_trap"</span>, <span class="st">"valence"</span>, <span class="st">"arousal"</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># create list to store plots</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># iterate over measures and create plots</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (measure <span class="cf">in</span> measures) {</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  plot <span class="ot">&lt;-</span> train_dataset <span class="sc">%&gt;%</span> </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(subject <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(video <span class="sc">==</span> <span class="st">"scary-2"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>time, <span class="at">y=</span><span class="sc">!!</span><span class="fu">sym</span>(measure), <span class="at">color=</span>video)) <span class="sc">+</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.2</span>, <span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># remove legend</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position=</span><span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># remove x-axis label</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># y-axis to have 2 decimal places</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">number_format</span>(<span class="at">accuracy =</span> <span class="fl">0.1</span>))</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add plot to list</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  plots[[measure]] <span class="ot">&lt;-</span> plot</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="co"># combine plots using patchwork::wrap_plots</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>all_plots <span class="ot">&lt;-</span> patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(plots, </span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                                <span class="at">ncol =</span> <span class="dv">1</span>, </span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>                                <span class="at">guides=</span><span class="st">"auto"</span>) <span class="sc">+</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>                <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Data from Subject 0: Scary-2 video"</span>)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co"># save the plots</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="st">"subject0-scaryvid.png"</span>, all_plots, <span class="at">width=</span><span class="dv">5</span>, <span class="at">height=</span><span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><img src="subject0-scaryvid.png" width="70%"></p>
+<p>Hm, just by looking, it doesn’t seem like there is a very clear relationship between the physiological measures and the emotion annotations. Near the end of the video, you see a bit of a spike in the EMG recordings (muscles) and GSR (skin conductance), which probably corresponded to a jumpy part in the scary clip. But let’s see what the linear regression model says.</p>
+</section>
+<section id="linear-regression-model" class="level2">
+<h2 class="anchored" data-anchor-id="linear-regression-model">Linear regression model</h2>
+<p>We will be fitting a linear regression model with the <code>lm()</code> function. (I also have, in the code chunk below, written a mixed effects model using <code>lmer</code> where I specified a varying intercept for each video, if you want to play around with that. I decided to keep it simple for this post.)</p>
+<p>More importantly, we will train the model using the training dataset, and then evaluate the model using the test dataset. We will generate predictions for the test dataset and then calculate the RMSE for each subject for valence and arousal.</p>
+<p>The formula for the linear regression model is: <code>y ~ ecg + bvp + gsr + rsp + skt + emg_zygo + emg_coru + emg_trap</code>; where <code>y = valence</code> and <code>y = arousal</code> separately.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># train a model (mixed effects)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># library(lme4)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># m.arousal &lt;- lmer(arousal ~ ecg + bvp + gsr + rsp + skt + emg_zygo + emg_coru + emg_trap + (1 | video), data=train_dataset)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># m.valence &lt;- lmer(valence ~ ecg + bvp + gsr + rsp + skt + emg_zygo + emg_coru + emg_trap + (1 | video), data=train_dataset)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># train a model (linear regression)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>m.arousal <span class="ot">&lt;-</span> <span class="fu">lm</span>(arousal <span class="sc">~</span> ecg <span class="sc">+</span> bvp <span class="sc">+</span> gsr <span class="sc">+</span> rsp <span class="sc">+</span> skt <span class="sc">+</span> emg_zygo <span class="sc">+</span> emg_coru <span class="sc">+</span> emg_trap, <span class="at">data=</span>train_dataset)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>m.valence <span class="ot">&lt;-</span> <span class="fu">lm</span>(valence <span class="sc">~</span> ecg <span class="sc">+</span> bvp <span class="sc">+</span> gsr <span class="sc">+</span> rsp <span class="sc">+</span> skt <span class="sc">+</span> emg_zygo <span class="sc">+</span> emg_coru <span class="sc">+</span> emg_trap, <span class="at">data=</span>train_dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Let’s take a look at the model summary for arousal:</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jtools)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># summary of arousal model</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summ</span>(m.arousal, <span class="at">confint=</span><span class="cn">TRUE</span>, <span class="at">digits=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Observations </td>
+   <td style="text-align:right;"> 158663 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Dependent variable </td>
+   <td style="text-align:right;"> arousal </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Type </td>
+   <td style="text-align:right;"> OLS linear regression </td>
+  </tr>
+</tbody>
+</table> <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> F(8,158654) </td>
+   <td style="text-align:right;"> 1644.846 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> R² </td>
+   <td style="text-align:right;"> 0.077 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Adj. R² </td>
+   <td style="text-align:right;"> 0.077 </td>
+  </tr>
+</tbody>
+</table> <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;border-bottom: 0;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> Est. </th>
+   <th style="text-align:right;"> 2.5% </th>
+   <th style="text-align:right;"> 97.5% </th>
+   <th style="text-align:right;"> t val. </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> (Intercept) </td>
+   <td style="text-align:right;"> 3.054 </td>
+   <td style="text-align:right;"> 2.851 </td>
+   <td style="text-align:right;"> 3.256 </td>
+   <td style="text-align:right;"> 29.537 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ecg </td>
+   <td style="text-align:right;"> 0.034 </td>
+   <td style="text-align:right;"> 0.014 </td>
+   <td style="text-align:right;"> 0.053 </td>
+   <td style="text-align:right;"> 3.428 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> bvp </td>
+   <td style="text-align:right;"> 0.025 </td>
+   <td style="text-align:right;"> 0.020 </td>
+   <td style="text-align:right;"> 0.030 </td>
+   <td style="text-align:right;"> 9.677 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> gsr </td>
+   <td style="text-align:right;"> 0.034 </td>
+   <td style="text-align:right;"> 0.034 </td>
+   <td style="text-align:right;"> 0.035 </td>
+   <td style="text-align:right;"> 95.250 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> rsp </td>
+   <td style="text-align:right;"> -0.027 </td>
+   <td style="text-align:right;"> -0.029 </td>
+   <td style="text-align:right;"> -0.025 </td>
+   <td style="text-align:right;"> -30.051 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> skt </td>
+   <td style="text-align:right;"> 0.042 </td>
+   <td style="text-align:right;"> 0.039 </td>
+   <td style="text-align:right;"> 0.044 </td>
+   <td style="text-align:right;"> 29.915 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> emg_zygo </td>
+   <td style="text-align:right;"> 0.033 </td>
+   <td style="text-align:right;"> 0.032 </td>
+   <td style="text-align:right;"> 0.035 </td>
+   <td style="text-align:right;"> 44.221 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> emg_coru </td>
+   <td style="text-align:right;"> 0.013 </td>
+   <td style="text-align:right;"> 0.012 </td>
+   <td style="text-align:right;"> 0.014 </td>
+   <td style="text-align:right;"> 30.656 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> emg_trap </td>
+   <td style="text-align:right;"> 0.004 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.004 </td>
+   <td style="text-align:right;"> 21.663 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+</tbody>
+<tfoot><tr><td style="padding: 0; " colspan="100%">
+<sup></sup> Standard errors: OLS</td></tr></tfoot>
+</table>
+</div>
+</div>
+<p>And here’s the summary for valence:</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># summary of valence model</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summ</span>(m.valence, <span class="at">confint=</span><span class="cn">TRUE</span>, <span class="at">digits=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Observations </td>
+   <td style="text-align:right;"> 158663 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Dependent variable </td>
+   <td style="text-align:right;"> valence </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Type </td>
+   <td style="text-align:right;"> OLS linear regression </td>
+  </tr>
+</tbody>
+</table> <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> F(8,158654) </td>
+   <td style="text-align:right;"> 1881.978 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> R² </td>
+   <td style="text-align:right;"> 0.087 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Adj. R² </td>
+   <td style="text-align:right;"> 0.087 </td>
+  </tr>
+</tbody>
+</table> <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;border-bottom: 0;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> Est. </th>
+   <th style="text-align:right;"> 2.5% </th>
+   <th style="text-align:right;"> 97.5% </th>
+   <th style="text-align:right;"> t val. </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> (Intercept) </td>
+   <td style="text-align:right;"> 7.832 </td>
+   <td style="text-align:right;"> 7.614 </td>
+   <td style="text-align:right;"> 8.050 </td>
+   <td style="text-align:right;"> 70.367 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ecg </td>
+   <td style="text-align:right;"> -0.030 </td>
+   <td style="text-align:right;"> -0.051 </td>
+   <td style="text-align:right;"> -0.009 </td>
+   <td style="text-align:right;"> -2.839 </td>
+   <td style="text-align:right;"> 0.005 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> bvp </td>
+   <td style="text-align:right;"> -0.025 </td>
+   <td style="text-align:right;"> -0.030 </td>
+   <td style="text-align:right;"> -0.020 </td>
+   <td style="text-align:right;"> -9.092 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> gsr </td>
+   <td style="text-align:right;"> -0.034 </td>
+   <td style="text-align:right;"> -0.035 </td>
+   <td style="text-align:right;"> -0.033 </td>
+   <td style="text-align:right;"> -86.972 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> rsp </td>
+   <td style="text-align:right;"> -0.015 </td>
+   <td style="text-align:right;"> -0.017 </td>
+   <td style="text-align:right;"> -0.013 </td>
+   <td style="text-align:right;"> -15.267 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> skt </td>
+   <td style="text-align:right;"> -0.022 </td>
+   <td style="text-align:right;"> -0.025 </td>
+   <td style="text-align:right;"> -0.019 </td>
+   <td style="text-align:right;"> -14.640 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> emg_zygo </td>
+   <td style="text-align:right;"> 0.045 </td>
+   <td style="text-align:right;"> 0.043 </td>
+   <td style="text-align:right;"> 0.046 </td>
+   <td style="text-align:right;"> 55.045 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> emg_coru </td>
+   <td style="text-align:right;"> -0.023 </td>
+   <td style="text-align:right;"> -0.024 </td>
+   <td style="text-align:right;"> -0.023 </td>
+   <td style="text-align:right;"> -50.376 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> emg_trap </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 0.007 </td>
+   <td style="text-align:right;"> 35.300 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+</tbody>
+<tfoot><tr><td style="padding: 0; " colspan="100%">
+<sup></sup> Standard errors: OLS</td></tr></tfoot>
+</table>
+</div>
+</div>
+<p>Great! We have our models. The <span class="math inline">\(R^2\)</span> suggests that &lt;10% of the variance is explained by our models, even though all the variables are statistically significant. (When I played around with the mixed effects model with varying intercepts for each video, the variance explained went up to ~60%). Anyways, let’s generate predictions for the test dataset!</p>
+</section>
+<section id="computing-the-rmse" class="level2">
+<h2 class="anchored" data-anchor-id="computing-the-rmse">Computing the RMSE</h2>
+<p>We will use the <code>predict()</code> function to generate predictions for the test dataset for each subject and each video. We will then calculate the mean RMSE for valence and arousal, averaged across all subjects.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># subset test dataset into X_test and y_true</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>X_test <span class="ot">&lt;-</span> test_dataset <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>fold, <span class="sc">-</span>valence, <span class="sc">-</span>arousal)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>y_true <span class="ot">&lt;-</span> test_dataset <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(subject, video, time, valence, arousal)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># use models to predict arousal and valence using test input</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># initialise counter</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>counter <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>rmse_values_arousal <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>rmse_values_valence <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>test_pred_arousal <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>test_pred_valence <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (sub <span class="cf">in</span> <span class="fu">unique</span>(X_test<span class="sc">$</span>subject)) {</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (vid <span class="cf">in</span> <span class="fu">unique</span>(X_test<span class="sc">$</span>video)) {</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>        <span class="co"># add to counter</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        counter <span class="ot">&lt;-</span> counter <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># subset the data</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        df <span class="ot">&lt;-</span> <span class="fu">subset</span>(X_test, subject <span class="sc">==</span> sub <span class="sc">&amp;</span> video <span class="sc">==</span> vid)</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>        <span class="co"># subset the true y data</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>        df_true_y <span class="ot">&lt;-</span> <span class="fu">subset</span>(y_true, subject <span class="sc">==</span> sub <span class="sc">&amp;</span> video <span class="sc">==</span> vid)</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>        <span class="co"># predict arousal</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>        pred_arousal <span class="ot">&lt;-</span> <span class="fu">predict</span>(m.arousal, <span class="at">newdata =</span> df)</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>        <span class="co"># predict valence</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>        pred_valence <span class="ot">&lt;-</span> <span class="fu">predict</span>(m.valence, <span class="at">newdata =</span> df)</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>        <span class="co"># calculate RMSE</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>        rmse_arousal <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_true<span class="sc">$</span>arousal <span class="sc">-</span> pred_arousal)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>        rmse_valence <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_true<span class="sc">$</span>valence <span class="sc">-</span> pred_valence)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>        <span class="co"># store RMSE values</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>        rmse_values_arousal[[counter]] <span class="ot">&lt;-</span> rmse_arousal</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>        rmse_values_valence[[counter]] <span class="ot">&lt;-</span> rmse_valence</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>        <span class="co"># store predictions </span></span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>        test_pred_arousal[[counter]] <span class="ot">&lt;-</span> pred_arousal</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>        test_pred_valence[[counter]] <span class="ot">&lt;-</span> pred_valence</span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>average_rmse_arousal <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">unlist</span>(rmse_values_arousal))</span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>average_rmse_valence <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">unlist</span>(rmse_values_valence))</span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a><span class="co"># print average RMSE values </span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"Average RMSE Arousal:"</span>, <span class="fu">round</span>(average_rmse_arousal, <span class="dv">3</span>),</span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Average RMSE Valence:"</span>, <span class="fu">round</span>(average_rmse_valence, <span class="dv">3</span>), </span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a>      <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Average RMSE Arousal: 1.881 Average RMSE Valence: 2.001"</code></pre>
+</div>
+</div>
+<p>We got our RMSE values using this equation: <code>sqrt(mean((y_true - y_pred)^2))</code>. That is, we take the difference between the true value and the predicted value, square it, take the mean, and then take the square root. RMSE is the standard deviation of the residuals, and it tells us how far the true values are from our fitted regression line.</p>
+<p>So what exactly does the RMSE score tell us? How “<em>wrong</em>” is our model? Is it wrong in many small ways or a few large ways? By squaring errors and calculating a mean, the RMSE penalises large errors.</p>
+<p>Going back to my intro – where I said there were studies quoting an RMSE of 1.2 as “the best fitting model” – let’s see what our model of RMSE 1.8 actually looks like in terms of how well it really fits.</p>
+<p>Let’s plot the predicted valence and arousal ratings against the true ratings for each of our 8 participants per video. First, we’ll use scatter plots to see how well our predicted correlates with true ratings.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert lists to data frames</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>df_pred <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">valence_pred =</span> <span class="fu">unlist</span>(test_pred_valence), </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">arousal_pred =</span> <span class="fu">unlist</span>(test_pred_arousal)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>y_hat_y_true <span class="ot">&lt;-</span> <span class="fu">cbind</span>(df_pred, y_true)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># initialise empty list for storing plots</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># initialise counter</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>sub_i <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># loop through subjects</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (sub <span class="cf">in</span> <span class="fu">unique</span>(y_hat_y_true<span class="sc">$</span>subject)) {</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add to counter</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  sub_i <span class="ot">&lt;-</span> sub_i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># initialise empty list for storing subject plots</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  subplots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># loop through videos (for each subject)</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span>(vid <span class="cf">in</span> <span class="fu">unique</span>(y_hat_y_true<span class="sc">$</span>video)){</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>      <span class="co"># subset data</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>      subset <span class="ot">&lt;-</span> y_hat_y_true <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subject <span class="sc">==</span> sub <span class="sc">&amp;</span> video <span class="sc">==</span> vid)</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>      <span class="co"># create scatter plot + add to list</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>      subplots[[vid]] <span class="ot">&lt;-</span> subset <span class="sc">%&gt;%</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>valence, <span class="at">y=</span>valence_pred)) <span class="sc">+</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_abline</span>(<span class="at">slope=</span><span class="dv">1</span>, <span class="at">intercept=</span><span class="dv">0</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">color=</span><span class="st">"lightgrey"</span>) <span class="sc">+</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_jitter</span>(<span class="at">width=</span><span class="fl">0.05</span>, <span class="at">height=</span><span class="fl">0.05</span>, <span class="at">color=</span><span class="st">"#00aedb"</span>, <span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_jitter</span>(<span class="fu">aes</span>(<span class="at">x=</span>arousal, <span class="at">y=</span>arousal_pred), <span class="at">width=</span><span class="fl">0.05</span>, <span class="at">height=</span><span class="fl">0.05</span>, <span class="at">color=</span><span class="st">"#d11141"</span>, <span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggtitle</span>(<span class="fu">paste0</span>(<span class="st">"Sub "</span>, sub, <span class="st">" : "</span>, vid)) <span class="sc">+</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"True"</span>, <span class="at">y=</span><span class="st">"Predicted"</span>) <span class="sc">+</span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>        <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">10</span>) <span class="sc">+</span> <span class="fu">ylim</span>(<span class="dv">0</span>,<span class="dv">10</span>)</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># arrange subject's plots in a column</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>    plots[[sub_i]] <span class="ot">&lt;-</span> patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(subplots, <span class="at">ncol=</span><span class="dv">1</span>)</span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a><span class="co"># arrange all subjects' plots in a grid</span></span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(plots, <span class="at">ncol=</span><span class="dv">4</span>) <span class="sc">+</span> </span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add title</span></span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Scatter Plot of Predicted and True Ratings"</span>)</span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a><span class="co"># save plot</span></span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="st">"pred_cor.png"</span>, p, <span class="at">width=</span><span class="dv">12</span>, <span class="at">height=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><img src="pred_cor.png" width="100%"></p>
+<p>Next, we’ll look at how well our predicted ratings look against the true ratings over time.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># initialise empty list for storing plots</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># initialise counter</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>sub_i <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># loop through subjects</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (sub <span class="cf">in</span> <span class="fu">unique</span>(y_hat_y_true<span class="sc">$</span>subject)) {</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add to counter</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  sub_i <span class="ot">&lt;-</span> sub_i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># initialise empty list for storing subject plots</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  subplots <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># loop through videos (for each subject)</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span>(vid <span class="cf">in</span> <span class="fu">unique</span>(y_hat_y_true<span class="sc">$</span>video)){</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>      <span class="co"># subset data</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>      subset <span class="ot">&lt;-</span> y_hat_y_true <span class="sc">%&gt;%</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(subject <span class="sc">==</span> sub <span class="sc">&amp;</span> video <span class="sc">==</span> vid) <span class="sc">%&gt;%</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pivot_longer</span>(<span class="at">cols=</span><span class="fu">c</span>(valence, valence_pred, arousal, arousal_pred), <span class="at">names_to=</span><span class="st">"annotations"</span>, <span class="at">values_to=</span><span class="st">"value"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(<span class="at">annotations =</span> <span class="fu">factor</span>(annotations))</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>      <span class="co"># create line plot + add to list</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>      subplots[[vid]] <span class="ot">&lt;-</span> subset <span class="sc">%&gt;%</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>time, <span class="at">y=</span>value, <span class="at">color=</span>annotations)) <span class="sc">+</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">linetype=</span>annotations, <span class="at">color=</span>annotations)) <span class="sc">+</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">scale_linetype_manual</span>(<span class="at">values=</span><span class="fu">c</span>(<span class="st">"solid"</span>, <span class="st">"dotted"</span>, <span class="st">"solid"</span>, <span class="st">"dotted"</span>))<span class="sc">+</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>        <span class="fu">scale_color_manual</span>(<span class="at">values=</span><span class="fu">c</span>(<span class="st">"#d11141"</span>, <span class="st">"#d11141"</span>, <span class="st">"#00aedb"</span>, <span class="st">"#00aedb"</span>)) <span class="sc">+</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggtitle</span>(<span class="fu">paste0</span>(<span class="st">"Sub "</span>, sub, <span class="st">" : "</span>, vid)) <span class="sc">+</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme</span>(<span class="at">legend.position=</span><span class="st">"right"</span>)</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>    <span class="co"># arrange subject's plots in a column</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>    plots[[sub_i]] <span class="ot">&lt;-</span> patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(subplots, <span class="at">ncol=</span><span class="dv">1</span>)</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a><span class="co"># arrange all subjects' plots in a grid</span></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(plots, <span class="at">ncol=</span><span class="dv">4</span>, <span class="at">guides=</span><span class="st">"collect"</span>) <span class="sc">+</span> </span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add title</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Predicted vs True Ratings per Subject per Video"</span>)</span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a><span class="co"># save plot</span></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="st">"pred_v_true.png"</span>, p, <span class="at">width=</span><span class="dv">15</span>, <span class="at">height=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><img src="pred_v_true.png" width="100%"></p>
+<p>So, what do you think? Our RMSE for arousal was 1.8, which means that on average, our model was off by 1.8 points. But once we plotted it against the real values (especially over time), we see that our model is actually pretty awful. However, when the dataset gets large and the model gets more complex, it can be difficult to plot and visualise the model. In many ML applications, we often only ever look at one accuracy metric to determine whether a model is good at the task.</p>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>While it is important to quantitatively have metrics to measure how well our models are doing, it is still extremely important to look at the data and predictions qualitatively. Even though, for every observation, our model might only be wrong an average of 1.2 units (in the case of the RMSE = 1.2 model), if we string all these together to make hundreds of consecutive predictions, our model can be very wrong while still having a relatively “good” fit on average. So don’t be fooled by statistics and averages! And just because a model is termed “winning model” doesn’t mean it’s actually a good model, it just means the other models were worse.</p>
+<hr>
+<section id="acknowledgements" class="level5">
+<h5 class="anchored" data-anchor-id="acknowledgements">Acknowledgements</h5>
+<p>Special thanks to the EPiC organisers for putting together such a fun competition, and to the CASE researchers who collected and made this dataset available. And thanks to Jason Geller for introducing me to Quarto blogs.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
