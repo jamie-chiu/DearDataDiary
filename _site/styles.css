@@ -1,0 +1,20 @@
+/* css styles */
+.quarto-title-banner {
+    background-color: #00afdb;
+}
+
+.quarto-header {
+    background-color: #00afdb;
+}
+
+.navbar-dark {
+    background-color: #00afdb;
+    }
+
+h1, .h1 {
+    color: white;
+    }
+
+p, .p {
+    font-size: 20px;
+}

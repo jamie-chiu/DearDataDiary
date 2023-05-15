@@ -1,0 +1,16 @@
+---
+title: "About"
+image: profile.png
+about:
+  template: jolla
+  links:
+    - icon: twitter
+      text: Twitter
+      href: https://twitter.com/imjamiechiu
+    - icon: github
+      text: Github
+      href: https://github.com/jamie-chiu/Dear (Data) Diary
+
+---
+
+Dear (Data) Diary is a blog about data science, machine learning, and statistics. Here, we try to answer questions like "Wait, how?" and "Why?" and "How did they come to that conclusion?". Part musings part tutorials, we hope to provide a resource for those who are curious about the world around them and want to learn more about how numbers and data can help us understand it.
